@@ -10,6 +10,7 @@ DSH plugin with its own `package.json`, `cordis.patch.yml`, and `README.md`.
 | Plugin | Description | Link |
 | --- | --- | --- |
 | `dsh-quick-commands` | Cursor-style quick-command chips above the composer; clicking a chip writes the command into the input and submits it directly. | [dsh-quick-commands](./dsh-quick-commands) |
+| `dsh-github` | GitHub issues & pull-requests side panel (close/reopen issues, merge/close PRs, quote into the composer); integrates with `dsh-better-sidebar` or renders its own Sider. | [dsh-github](./dsh-github) |
 
 ### dsh-quick-commands
 
@@ -22,6 +23,16 @@ DSH plugin with its own `package.json`, `cordis.patch.yml`, and `README.md`.
   - `commit`
 - **Platform**: Web (`dsh.client`)
 - **Details**: [dsh-quick-commands/README.md](./dsh-quick-commands/README.md)
+
+### dsh-github
+
+- **What it does**: A GitHub side panel for the repository the current workspace's git
+  `origin` points at. Lists issues and pull requests, and lets you close/reopen issues,
+  merge/close PRs, and quote an item into the composer.
+- **Panel placement**: registers a `dsh-better-sidebar` tab when that plugin is installed;
+  otherwise renders its own standalone Sider (sidebar-footer toggle + right-docked drawer).
+- **Platform**: Web (`dsh.client`); host half proxies the GitHub REST API.
+- **Details**: [dsh-github/README.md](./dsh-github/README.md)
 
 ## Installing a plugin
 
