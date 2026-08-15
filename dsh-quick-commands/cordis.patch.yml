@@ -1,0 +1,8 @@
+# dsh-quick-commands bundle patch
+#
+# One `dsh.client` row: the browser roster the modules node half scans into
+# window.__DSH_BOOT__. The row id is the package name used as the client
+# module id (`/plugins/dsh-quick-commands/client.js`).
+- insert:
+    - id: quick-commands
+      name: 'dsh-quick-commands'
