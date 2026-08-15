@@ -10,6 +10,7 @@
 | 插件 | 说明 | 链接 |
 | --- | --- | --- |
 | `dsh-quick-commands` | 在输入框上方显示 Cursor 风格快捷命令 chips，点击即写入输入框并直接发送。 | [dsh-quick-commands](./dsh-quick-commands) |
+| `dsh-github` | GitHub issues / PR 侧边面板（关闭/重开 issue、合并/关闭 PR、引用到对话框）；存在 `dsh-better-sidebar` 时接入其 tab，否则渲染独立 Sider。 | [dsh-github](./dsh-github) |
 
 ### dsh-quick-commands
 
@@ -21,6 +22,15 @@
   - `commit`
 - **运行平台**：Web（`dsh.client`）
 - **详细信息**：[dsh-quick-commands/README.md](./dsh-quick-commands/README.md)
+
+### dsh-github
+
+- **功能**：为当前工作区 git `origin` 指向的仓库提供 GitHub 侧边面板。列出 issues 与
+  PR，支持关闭/重开 issue、合并/关闭 PR、把条目引用到输入框。
+- **面板位置**：已安装 `dsh-better-sidebar` 时注册为其 tab；否则渲染独立 Sider
+  （侧边栏底部按钮 + 右侧抽屉）。
+- **运行平台**：Web（`dsh.client`）；host 半代理 GitHub REST API。
+- **详细信息**：[dsh-github/README.md](./dsh-github/README.md)
 
 ## 安装插件
 
