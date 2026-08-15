@@ -2,6 +2,8 @@
 
 DSH Web GUI 客户端插件：在聊天**输入框上方**加一排 Cursor 风格的快捷命令 chips。点击某个 chip 会把对应命令写入输入框并**直接发送**。
 
+> 源码托管于 [chanxiaoxi/dsh-plugins](https://github.com/chanxiaoxi/dsh-plugins) 插件仓库，本插件位于仓库的 `dsh-quick-commands/` 目录。
+
 首批命令（英文原文，来自会话历史里的最高频 git 工作流指令）：
 
 - `create new branch & commit & push pr`
@@ -32,8 +34,43 @@ dsh-quick-commands/
 ## 安装
 
 本插件需要安装进你想用的 profile，并加入该 profile 的 bundle 列表。
+源码托管于 [GitHub](https://github.com/chanxiaoxi/dsh-plugins)，位于仓库的 `dsh-quick-commands/` 目录。
 
-### 方式 A：发布到 npm 后安装
+### 方式 A：从 GitHub 克隆安装（推荐）
+
+1. 克隆插件仓库：
+
+   ```bash
+   git clone https://github.com/chanxiaoxi/dsh-plugins.git
+   ```
+
+2. 在**可写的 profile 目录**（`$DSH_HOME/profiles/web/`）里，以 file 依赖方式安装插件目录：
+
+   ```bash
+   cd "$DSH_HOME/profiles/web"
+   pnpm add file:/path/to/dsh-plugins/dsh-quick-commands
+   ```
+
+3. 手动把 `dsh-quick-commands` 加进 `package.json` 的 `dsh.profile.bundles` 数组：
+
+   ```json
+   {
+     "dsh": {
+       "profile": {
+         "bundles": [
+           "@deepseek-ai/dsh-base",
+           "@deepseek-ai/dsh-web-app",
+           "dsh-better-sidebar",
+           "dsh-quick-commands"
+         ]
+       }
+     }
+   }
+   ```
+
+   若插件已发布到 npm，也可改用 `dsh plugin add` 一步完成（见方式 B）。
+
+### 方式 B：发布到 npm 后安装
 
 ```bash
 # 1. 发布（在可写环境）
@@ -46,40 +83,13 @@ dsh plugin --profile web add dsh-quick-commands
 `dsh plugin add` 会识别 `dsh.bundle.patch`，并把 `dsh-quick-commands` 追加到
 `dsh.profile.bundles`，然后 profile 启动时自动合并 `cordis.patch.yml`。
 
-### 方式 B：本地 file 依赖（不发布）
-
-在**可写的 profile 目录**（`$DSH_HOME/profiles/web/`）里执行：
-
-```bash
-cd "$DSH_HOME/profiles/web"
-pnpm add file:/path/to/dsh-quick-commands
-```
-
-然后手动把 `dsh-quick-commands` 加进 `package.json` 的
-`dsh.profile.bundles` 数组：
-
-```json
-{
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "dsh-better-sidebar",
-        "dsh-quick-commands"
-      ]
-    }
-  }
-}
-```
-
 ### 方式 C：手动部署（完全离线）
 
 1. 把本目录复制到 profile 的 node_modules：
    ```bash
    cp -r dsh-quick-commands "$DSH_HOME/profiles/web/node_modules/"
    ```
-2. `package.json` 加 `dsh-quick-commands` 到 `dsh.profile.bundles`（同上）。
+2. `package.json` 加 `dsh-quick-commands` 到 `dsh.profile.bundles`（同方式 A 第 3 步）。
 3. 若 profile 用了 `dsh-better-sidebar` 那种独立 `cordis.patch.yml` 挂载，也可在其
    profile 的 `cordis.patch.yml` 手动 insert：
    ```yaml
