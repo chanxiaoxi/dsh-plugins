@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Pre-commit guard: refuse to commit directly on the default branch.
+# All changes must be committed on a feature branch and merged via PR.
+set -euo pipefail
+
+branch="$(git symbolic-ref --short HEAD 2>/dev/null || true)"
+
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  cat >&2 <<'EOF'
+❌ Committing directly to 'main'/'master' is forbidden in this repo.
+
+   All changes must go through a pull request:
+     git checkout -b <branch-name>
+     git add ...
+     git commit ...
+     git push -u origin <branch-name>
+     gh pr create --title "..." --body "..."
+
+   To override intentionally: git commit --no-verify   (but don't).
+EOF
+  exit 1
+fi
+
+exit 0
