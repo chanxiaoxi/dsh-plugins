@@ -5,8 +5,9 @@
 // directory, derives the `owner/repo` from the `origin` remote, and proxies
 // list/mutation calls to the GitHub REST API. Authentication order is:
 //
-//   1. the `gh` CLI when it is installed AND logged in (`gh auth login`)
-//   2. GITHUB_TOKEN / GH_TOKEN environment variable (Bearer)
+//   1. GITHUB_TOKEN / GH_TOKEN environment variable (Bearer, direct API)
+//   2. the `gh` CLI's stored token when logged in (`gh auth login`) — read once
+//      and cached, so every call is a fast direct API request, not a subprocess
 //   3. anonymous (public repositories, read-only — mutations fail loudly)
 //
 // Routes (all JSON, all HTTP 200 with an `ok` envelope):
@@ -81,17 +82,15 @@ function runProcess(file, args, opts = {}) {
 	});
 }
 
-/** Cached one-shot probe: is the `gh` CLI installed AND logged in? */
-let ghAuthPromise = null;
-function ghAuthed() {
-	if (ghAuthPromise === null) {
-		// `gh auth status` exits 0 when authenticated, non-zero otherwise, and
-		// never prompts — a safe, fast "is gh ready to use" check.
-		ghAuthPromise = runProcess("gh", ["auth", "status"], { timeout: 4000 }).then(
-			(r) => r.ok,
+/** Cached one-shot: the `gh` CLI's stored token (empty string when absent). */
+let ghTokenPromise = null;
+function ghToken() {
+	if (ghTokenPromise === null) {
+		ghTokenPromise = runProcess("gh", ["auth", "token"], { timeout: 4000 }).then(
+			(r) => (r.ok ? (r.stdout || "").trim() : ""),
 		);
 	}
-	return ghAuthPromise;
+	return ghTokenPromise;
 }
 
 /**
@@ -143,31 +142,9 @@ async function resolveRepo(cwd) {
 
 /** Report which auth channel is currently active. */
 async function authMode() {
-	if (await ghAuthed()) return "gh";
 	if (TOKEN) return "token";
+	if (await ghToken()) return "gh";
 	return "anonymous";
-}
-
-/** GitHub REST call through the `gh` CLI (stdin carries the JSON body). */
-async function ghApi(method, path, body) {
-	const args = ["api", path, "--method", method];
-	if (body !== undefined) args.push("--input", "-");
-	const r = await runProcess("gh", args, {
-		input: body === undefined ? undefined : JSON.stringify(body),
-		timeout: 30000,
-	});
-	if (!r.ok) {
-		const stderr = (r.stderr || "").trim();
-		const last = stderr.split("\n").filter(Boolean).pop();
-		throw new Error(last || `gh exit ${r.code}`);
-	}
-	const text = (r.stdout || "").trim();
-	if (!text) return null;
-	try {
-		return JSON.parse(text);
-	} catch {
-		return text;
-	}
 }
 
 /** GitHub REST call through `fetch` with an optional bearer token. */
@@ -204,13 +181,14 @@ async function fetchApi(method, path, body, token) {
 }
 
 /**
- * Single GitHub request entrypoint: logged-in `gh` first, then token env,
- * then anonymous (read-only). Mutations without any auth fail with a clear
- * error.
+ * Single GitHub request entrypoint. Resolves one bearer token (env first,
+ * then the cached `gh` token) and always calls the API directly with `fetch`;
+ * `gh` is spawned at most once, so the panel never pays per-request
+ * subprocess overhead. Mutations without any auth fail with a clear error.
  */
 async function githubRequest(method, path, body) {
-	if (await ghAuthed()) return ghApi(method, path, body);
-	if (TOKEN) return fetchApi(method, path, body, TOKEN);
+	const token = TOKEN || (await ghToken());
+	if (token) return fetchApi(method, path, body, token);
 	if (method === "GET") return fetchApi(method, path, body, undefined);
 	throw new Error(
 		"Write operations need authentication: run `gh auth login` or set GITHUB_TOKEN (or GH_TOKEN)",

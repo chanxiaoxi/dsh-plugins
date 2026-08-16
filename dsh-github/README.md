@@ -25,9 +25,9 @@ DSH Web GUI 客户端插件：为**当前工作区关联的 GitHub 仓库**提�
 - **仓库识别**（host 侧）：读取当前会话工作目录的 `git remote get-url origin`
   （回退 `git config remote.origin.url`），解析出 `owner/repo`。仅支持 github.com
   （含 `git@` / `ssh://` 形式）；非 GitHub 远程会提示「未找到仓库」。
-- **鉴权顺序**：
-  1. 已安装且**已登录**的 `gh` CLI（`gh auth login` 后即可直接用）；
-  2. 环境变量 `GITHUB_TOKEN`（或 `GH_TOKEN`）→ Bearer 请求（没有可用的 `gh` 时）；
+- **鉴权顺序**（所有请求都用 `fetch` 直连 GitHub API，不再逐请求 spawn `gh`）：
+  1. 环境变量 `GITHUB_TOKEN`（或 `GH_TOKEN`）→ Bearer 请求（最快，最可控）；
+  2. `gh` CLI 已登录时，启动后**只取一次**其 token（`gh auth token`）并缓存，之后同样直连；
   3. 匿名（仅公开仓库的只读浏览；写操作会明确报错）。
 - 面板头部会显示当前鉴权通道：`token` / `gh` / `read-only`（匿名）。
 
@@ -116,10 +116,11 @@ dsh plugin --profile web add dsh-github
 
 ## 鉴权提示
 
-- **首选**：本地 `gh auth login` 后即可直接使用（`gh auth status` 会被用来探测登录态）。
-- 没有 `gh`（或未登录）时：设置 `GITHUB_TOKEN`：`export GITHUB_TOKEN=ghp_...`
-  （host 侧进程需能读到）。
-- 无鉴权时只能浏览公开仓库的 open/closed 列表，无法执行写操作。
+- **推荐**：设置 `GITHUB_TOKEN`（`export GITHUB_TOKEN=ghp_...`，host 侧进程需能读到），
+  速度最快、行为最可控。
+- 或者 `gh auth login` 后即可直接使用——插件启动后只取一次 `gh` 的 token 并缓存，
+  之后同样走直连，无逐请求的子进程开销。
+- 两者都没有时，只能浏览公开仓库的 open/closed 列表，无法执行写操作。
 
 ## 依赖说明
 
